@@ -17,7 +17,11 @@ io.sockets.on('connection', function (socket) {
     socket.emit('message', m);
   });
   socket.on('leave', function (who) {
-    io.sockets.emit('message', {who: who, msg: "left the room."});
+    socket.get('name', function(err, name) {
+      if(name) {
+        broadcastMessage({who: name, msg: "left the room"});
+      }
+    });
   });
   socket.on('message', function (message) {
     if(message.msg.match(/^\//)) {
