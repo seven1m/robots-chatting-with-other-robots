@@ -1,12 +1,8 @@
 # Robots Chatting With Other Robots
 
-**Warning:** This is a novelty, with several security flaws, not least of which are:
+**Warning:** This is a novelty, with several security flaws, not least of which is the fact that arbitrary html is allowed for messages. Use at your own risk.
 
-* Arbitrary html is allowed to be broadcast to all users.
-* Users can see message playback even if not logged in.
-* XSS
-
-![Screenshot](http://i.imgur.com/UDv2h.png)
+![Screenshot](http://i.imgur.com/EmwVQ.png)
 
 Local installation:
 
