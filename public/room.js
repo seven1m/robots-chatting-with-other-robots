@@ -1,8 +1,8 @@
 $(document).ready(function () {
   var lastBy;
-  var odd = false;
   var baseUrl = location.href.match(/^https?:\/\/[^\/]+/)[0];
   var socket = io.connect(baseUrl);
+  var me;
 
   socket.on('connect', function() {
     $('#messages').empty();
@@ -14,21 +14,7 @@ $(document).ready(function () {
   });
 
   socket.on('message', function(message) {
-    var html;
-    if(message.who != lastBy) {
-      odd ^= true;
-      var imgUrl = 'http://static1.robohash.com/' + encodeURIComponent(message.who);
-      var avatar = '<a href="' + imgUrl + '"><img class="avatar" src="' + imgUrl + '"/></a>';
-      var time = '<span class="timestamp">' + $.format.date(new Date(), 'ddd hh:mm a') + '</span>';
-      var who = '<span class="who">' + message.who + '</span>';
-      html = '<br clear="left"/><div class="details ' + (odd ? 'odd' : 'even') + '">' + avatar + time + '<br/>' + who + '</div><div class="content ' + (odd ? 'odd' : 'even') + '"><div class="bubble">';
-      $('#messages').append(html + message.msg + '</div></div>');
-    } else {
-      $('#messages .bubble:last').append('<br/>' + message.msg);
-    }
-    console.log($('#messages').attr('scrollHeight') + 100);
-    $(window).scrollTop($('#messages').attr('scrollHeight') + 100);
-    lastBy = message.who;
+    printMessage(message, 'incoming');
   });
 
   socket.on('join', function(room) {
@@ -37,12 +23,37 @@ $(document).ready(function () {
 
   socket.on('login', function(name) {
     $.cookie('name', name);
+    me = name;
   });
 
   $('input').keydown(function (event) {
     if(event.keyCode === 13) {
-      socket.emit('message', {msg: $('input').val()});
+      var msg = $('input').val();
+      if(!msg.match(/^\//)) {
+        printMessage({who: me, msg: msg}, 'outgoing');
+      }
+      socket.emit('message', {msg: msg});
       $('input').val('');
     }
   })[0].focus();
 });
+
+var lastMessageBy;
+
+function printMessage(message, sound) {
+  if(message.who != lastMessageBy) {
+    var html;
+    var imgUrl = 'http://static1.robohash.com/' + encodeURIComponent(message.who);
+    var avatar = '<a href="' + imgUrl + '"><img class="avatar" src="' + imgUrl + '"/></a>';
+    var time = '<span class="timestamp">' + $.format.date(new Date(), 'ddd hh:mm a') + '</span>';
+    var who = '<span class="who">' + message.who + '</span>';
+    html = '<br clear="left"/><div class="details">' + avatar + time + '<br/>' + who + '</div><div class="content"><div class="bubble">';
+    $('#messages').append(html + message.msg + '</div></div>');
+
+  } else {
+    $('#messages .bubble:last').append('<br/>' + message.msg);
+  }
+  $(window).scrollTop($('#messages').attr('scrollHeight') + 100);
+  $('#' + sound + 'Sound')[0].play();
+  lastMessageBy = message.who;
+}

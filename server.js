@@ -87,9 +87,8 @@ io.sockets.on('connection', function (socket) {
       socket.get('name', function(err, name) {
         if(name) {
           message.who = name;
-          console.log('room:', socket);
           socket.get('room', function(err, room) {
-            io.sockets.in(room).emit('message', message);
+            socket.broadcast.in(room).emit('message', message);
           });
         } else {
           socket.emit('message', {who: 'system', msg: 'first identify yourself with /login YOURNAME'});
