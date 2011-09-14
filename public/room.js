@@ -38,16 +38,18 @@ $(document).ready(function () {
   })[0].focus();
 });
 
-var lastMessageBy;
+var lastMessageBy, lastMessageTime, oddMessage;
 
 function printMessage(message, sound) {
-  if(message.who != lastMessageBy) {
+  var when = message.when ? new Date(message.when) : new Date();
+  if(message.who != lastMessageBy || $.format.date(when, 'yyyyMMddHH') != $.format.date(lastMessageTime, 'yyyyMMddHH')) {
+    oddMessage ^= true;
     var html;
     var imgUrl = 'http://static1.robohash.com/' + encodeURIComponent(message.who);
     var avatar = '<a href="' + imgUrl + '"><img class="avatar" src="' + imgUrl + '"/></a>';
-    var time = '<span class="timestamp">' + $.format.date(new Date(), 'ddd hh:mm a') + '</span>';
+    var time = '<span class="timestamp">' + $.format.date(when, 'ddd hh:mm a') + '</span>';
     var who = '<span class="who">' + message.who + '</span>';
-    html = '<br clear="left"/><div class="details">' + avatar + time + '<br/>' + who + '</div><div class="content"><div class="bubble">';
+    html = '<br clear="left"/><div class="details">' + avatar + time + '<br/>' + who + '</div><div class="content"><div class="bubble ' + (oddMessage ? 'odd' : 'even') + '">';
     $('#messages').append(html + message.msg + '</div></div>');
 
   } else {
@@ -56,4 +58,5 @@ function printMessage(message, sound) {
   $(window).scrollTop($('#messages').attr('scrollHeight') + 100);
   $('#' + sound + 'Sound')[0].play();
   lastMessageBy = message.who;
+  lastMessageTime = when;
 }

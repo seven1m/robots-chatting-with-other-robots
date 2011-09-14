@@ -87,6 +87,7 @@ io.sockets.on('connection', function (socket) {
       socket.get('name', function(err, name) {
         if(name) {
           message.who = name;
+          message.when = new Date();
           socket.get('room', function(err, room) {
             socket.broadcast.in(room).emit('message', message);
           });
