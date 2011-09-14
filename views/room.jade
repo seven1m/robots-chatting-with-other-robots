@@ -11,3 +11,9 @@ html(lang="en")
     input(type="text", id="input")
     #messages
       | connecting...
+    audio(id="incomingSound", preload="preload")
+      source(src="incoming.mp3")
+      source(src="incoming.ogg")
+    audio(id="outgoingSound", preload="preload")
+      source(src="outgoing.mp3")
+      source(src="outgoing.ogg")
