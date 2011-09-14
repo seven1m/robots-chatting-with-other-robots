@@ -1,13 +1,24 @@
 HELP_MSG = '<strong>commands:</strong><br/>' +
            '/login YOURNAME<br/>'            +
-           '/join ROOM';
+           '/join ROOM<br/>'                 +
+           '/search TEXT<br/>'               +
+           '/history';
 ROOM_REGEXP = /^[a-z0-9_\-]+$/i;
 NAME_REGEXP = /^[a-z0-9_\-\s'"]+$/i;
+MAX_MESSAGE_COUNT = 100;
 
 var sys = require('sys');
 var express = require('express');
 var app = express.createServer();
 var io = require('socket.io').listen(app);
+var redis;
+if(process.env.REDISTOGO_URL) {
+  var rtg   = require('url').parse(process.env.REDISTOGO_URL);
+  redis = require('redis').createClient(rtg.port, rtg.hostname);
+  redis.auth(rtg.auth.split(':')[1]);
+} else {
+  redis = require('redis').createClient()
+}
 
 app.use(express.static(__dirname + '/public'));
 
@@ -58,7 +69,7 @@ io.sockets.on('connection', function (socket) {
           break;
         case '/login':
           if(parts[1]) {
-            var name = message.msg.replace(/^\/login\s+/, '');
+            var name = message.msg.replace(/^\/login\s+/i, '');
             if(name.match(NAME_REGEXP)) {
               socket.set('name', name);
               socket.get('room', function(err, room) {
@@ -79,6 +90,24 @@ io.sockets.on('connection', function (socket) {
             socket.emit('message', {who: 'system', msg: 'Invalid room name.'});
           }
           break;
+        case '/search':
+          var query = message.msg.replace(/^\/search\s+/i, '');
+          redis.lrange('messages', MAX_MESSAGE_COUNT*-1, -1, function(err, messages) {
+            messages.forEach(function(message) {
+              var message = JSON.parse(message);
+              if(message.msg.indexOf(query) > -1) {
+                socket.emit('message', message);
+              }
+            });
+          });
+          break;
+        case '/history':
+          redis.lrange('messages', MAX_MESSAGE_COUNT*-1, -1, function(err, messages) {
+            messages.forEach(function(message) {
+              socket.emit('message', JSON.parse(message));
+            });
+          });
+          break;
         default:
           resp = 'unknown command; type /help'
       }
@@ -90,6 +119,8 @@ io.sockets.on('connection', function (socket) {
           message.when = new Date();
           socket.get('room', function(err, room) {
             socket.broadcast.in(room).emit('message', message);
+            redis.rpush('messages', JSON.stringify(message));
+            redis.ltrim(MAX_MESSAGE_COUNT*-1, -1, function(err) {});
           });
         } else {
           socket.emit('message', {who: 'system', msg: 'first identify yourself with /login YOURNAME'});
