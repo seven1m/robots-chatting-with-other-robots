@@ -5,6 +5,7 @@ $(document).ready(function () {
   var socket = io.connect(baseUrl);
 
   socket.on('connect', function() {
+    $('#messages').empty();
     socket.emit('join', location.href.match(/\/([^\/]+)$/)[1]);
     var name;
     if(name = $.cookie('name')) {
