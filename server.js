@@ -2,6 +2,7 @@ HELP_MSG = '<strong>commands:</strong><br/>' +
            '/login YOURNAME<br/>'            +
            '/join ROOM';
 ROOM_REGEXP = /^[a-z0-9_\-]+$/i;
+NAME_REGEXP = /^[a-z0-9_\-\s'"]+$/i;
 
 var sys = require('sys');
 var express = require('express');
@@ -58,12 +59,24 @@ io.sockets.on('connection', function (socket) {
         case '/login':
           if(parts[1]) {
             var name = message.msg.replace(/^\/login\s+/, '');
-            socket.set('name', name);
-            socket.get('room', function(err, room) {
-              io.sockets.in(room).emit('message', {who: name, msg: '<em>logged in</em>'});
-            });
+            if(name.match(NAME_REGEXP)) {
+              socket.set('name', name);
+              socket.get('room', function(err, room) {
+                socket.emit('login', name);
+                io.sockets.in(room).emit('message', {who: name, msg: '<em>logged in</em>'});
+              });
+            } else {
+              socket.emit('message', {who: 'system', msg: 'Invalid name.'});
+            }
           } else {
             resp = HELP_MSG;
+          }
+          break;
+        case '/join':
+          if(parts[1] && parts[1].match(ROOM_REGEXP)) {
+            socket.emit('join', parts[1]);
+          } else {
+            socket.emit('message', {who: 'system', msg: 'Invalid room name.'});
           }
           break;
         default:
