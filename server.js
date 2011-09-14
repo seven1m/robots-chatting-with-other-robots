@@ -1,4 +1,7 @@
-HELP_MSG = '<strong>commands:</strong><br/>/login YOURNAME';
+HELP_MSG = '<strong>commands:</strong><br/>' +
+           '/login YOURNAME<br/>'            +
+           '/join ROOM';
+ROOM_REGEXP = /^[a-z0-9_\-]+$/i;
 
 var sys = require('sys');
 var express = require('express');
@@ -7,11 +10,40 @@ var io = require('socket.io').listen(app);
 
 app.use(express.static(__dirname + '/public'));
 
+app.set('view options', {layout: false});
+
+app.get('/', function(req, res) {
+  res.redirect('/lobby');
+});
+
+app.get('/:room', function(req, res) {
+  if(req.params.room.match(ROOM_REGEXP)) {
+    res.render('room.jade', {room: req.params.room});
+  } else {
+    res.send('Invalid room name.')
+  }
+});
+
 app.listen(process.env.PORT || 8080);
 
 io.sockets.on('connection', function (socket) {
+
   socket.on('connect', function() {
-    socket.emit({who: 'system', msg: "Welcome."});
+    socket.set('room', 'lobby');
+    socket.join('lobby');
+  });
+
+  socket.on('join', function(room) {
+    if(room.match(ROOM_REGEXP)) {
+      socket.get('room', function(err, oldRoom) {
+        socket.leave(oldRoom);
+        socket.set('room', room);
+        socket.join(room);
+        socket.emit('message', {who: 'system', msg: 'Welcome to ' + room});
+      });
+    } else {
+      socket.emit('message', {who: 'system', msg: 'Invalid room name.'});
+    }
   });
 
   socket.on('message', function (message) {
@@ -27,7 +59,9 @@ io.sockets.on('connection', function (socket) {
           if(parts[1]) {
             var name = message.msg.replace(/^\/login\s+/, '');
             socket.set('name', name);
-            io.sockets.emit('message', {who: name, msg: '<em>logged in</em>'});
+            socket.get('room', function(err, room) {
+              io.sockets.in(room).emit('message', {who: name, msg: '<em>logged in</em>'});
+            });
           } else {
             resp = HELP_MSG;
           }
@@ -40,7 +74,10 @@ io.sockets.on('connection', function (socket) {
       socket.get('name', function(err, name) {
         if(name) {
           message.who = name;
-          io.sockets.emit('message', message);
+          console.log('room:', socket);
+          socket.get('room', function(err, room) {
+            io.sockets.in(room).emit('message', message);
+          });
         } else {
           socket.emit('message', {who: 'system', msg: 'first identify yourself with /login YOURNAME'});
         }
@@ -51,7 +88,9 @@ io.sockets.on('connection', function (socket) {
   socket.on('disconnect', function () {
     socket.get('name', function(err, name) {
       if(name) {
-        io.sockets.emit('message', {who: name, msg: "<em>logged out</em>"});
+        socket.get('room', function(err, room) {
+          io.sockets.in(room).emit('message', {who: name, msg: "<em>logged out</em>"});
+        });
       }
     })
   });
