@@ -21,15 +21,13 @@ $(document).ready(function () {
       var avatar = '<a href="' + imgUrl + '"><img class="avatar" src="' + imgUrl + '"/></a>';
       var time = '<span class="timestamp">' + $.format.date(new Date(), 'ddd hh:mm a') + '</span>';
       var who = '<span class="who">' + message.who + '</span>';
-      html = '<br clear="left"/><div class="details ' + (odd ? 'odd' : 'even') + '">' + avatar + time + '<br/>' + who + '</div><div class="content push-down ' + (odd ? 'odd' : 'even') + '">';
+      html = '<br clear="left"/><div class="details ' + (odd ? 'odd' : 'even') + '">' + avatar + time + '<br/>' + who + '</div><div class="content ' + (odd ? 'odd' : 'even') + '"><div class="bubble">';
+      $('#messages').append(html + message.msg + '</div></div>');
     } else {
-      html = '<div class="content ' + (odd ? 'odd' : 'even') + '">';
+      $('#messages .bubble:last').append('<br/>' + message.msg);
     }
-    $('#messages').append(
-      html + message.msg + '</div>'
-    ).scrollTop(
-      $("#messages").attr("scrollHeight") + 100
-    );
+    console.log($('#messages').attr('scrollHeight') + 100);
+    $(window).scrollTop($('#messages').attr('scrollHeight') + 100);
     lastBy = message.who;
   });
 

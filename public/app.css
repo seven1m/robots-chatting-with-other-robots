@@ -13,6 +13,7 @@ html, body {
   left: 0;
   bottom: 0;
   width: 99%;
+  z-index: 100;
 }
 .timestamp {
   color: gray;
@@ -30,13 +31,49 @@ html, body {
   height: 50px;
   padding: 5px;
   float: left;
+  margin-top: -10px;
 }
 .content {
   margin-left: 220px;
   padding: 5px;
+  margin-top: -10px;
 }
 .push-down {
 }
 .odd {
-  background-color: #eee;
+  /*background-color: #eee;*/
+}
+.bubble {
+  position:relative;
+  padding:15px;
+  margin:5px;
+  color:#fff;
+  background:#075698; /* default background for browsers without gradient support */
+  /* css3 */
+  background:-webkit-gradient(linear, 0 0, 0 100%, from(#2e88c4), to(#075698));
+  background:-moz-linear-gradient(#2e88c4, #075698);
+  background:-o-linear-gradient(#2e88c4, #075698);
+  background:linear-gradient(#2e88c4, #075698);
+  -webkit-border-radius:10px;
+  -moz-border-radius:10px;
+  border-radius:10px;
+  margin-left:40px;
+  background:#075698;
+}
+.bubble:after {
+  content:"";
+  position:absolute;
+  bottom:-20px; /* value = - border-top-width - border-bottom-width */
+  left:50px; /* controls horizontal position */
+  border-width:20px 0 0 20px; /* vary these values to change the angle of the vertex */
+  border-style:solid;
+  border-color:#075698 transparent; 
+  /* reduce the damage in FF3.0 */
+  display:block; 
+  width:0;
+  top:16px; 
+  left:-40px; /* value = - border-left-width - border-right-width */
+  bottom:auto;
+  border-width:15px 40px 0 0; /* vary these values to change the angle of the vertex */
+  border-color:transparent #075698; 
 }

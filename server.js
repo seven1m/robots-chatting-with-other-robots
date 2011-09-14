@@ -83,7 +83,7 @@ io.sockets.on('connection', function (socket) {
           resp = 'unknown command; type /help'
       }
       if(resp) socket.emit('message', {who: 'system', msg: resp});
-    } else {
+    } else if(message.msg.replace(/\s*/, '') != '') {
       socket.get('name', function(err, name) {
         if(name) {
           message.who = name;
