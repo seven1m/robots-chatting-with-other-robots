@@ -31,9 +31,6 @@
           );
           lastBy = message.who;
         });
-        socket.on('disconnect', function () {
-          socket.emit('leave');
-        });
 
         $('input').keydown(function (event) {
           if(event.keyCode === 13) {

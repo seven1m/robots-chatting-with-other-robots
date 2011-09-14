@@ -1,4 +1,3 @@
-MAX_MESSAGES = 25;
 HELP_MSG = '<strong>commands:</strong><br/>/login YOURNAME';
 
 var sys = require('sys');
@@ -10,19 +9,11 @@ app.use(express.static(__dirname + '/public'));
 
 app.listen(process.env.PORT || 8080);
 
-var messages = [];
-
 io.sockets.on('connection', function (socket) {
-  messages.forEach(function(m) {
-    socket.emit('message', m);
+  socket.on('connect', function() {
+    socket.emit({who: 'system', msg: "Welcome."});
   });
-  socket.on('leave', function (who) {
-    socket.get('name', function(err, name) {
-      if(name) {
-        broadcastMessage({who: name, msg: "left the room"});
-      }
-    });
-  });
+
   socket.on('message', function (message) {
     if(message.msg.match(/^\//)) {
       var parts = message.msg.split(/\s+/);
@@ -36,7 +27,7 @@ io.sockets.on('connection', function (socket) {
           if(parts[1]) {
             var name = message.msg.replace(/^\/login\s+/, '');
             socket.set('name', name);
-            broadcastMessage({who: name, msg: '<em>logged in</em>'});
+            io.sockets.emit('message', {who: name, msg: '<em>logged in</em>'});
           } else {
             resp = HELP_MSG;
           }
@@ -49,22 +40,19 @@ io.sockets.on('connection', function (socket) {
       socket.get('name', function(err, name) {
         if(name) {
           message.who = name;
-          broadcastMessage(message);
+          io.sockets.emit('message', message);
         } else {
           socket.emit('message', {who: 'system', msg: 'first identify yourself with /login YOURNAME'});
         }
       });
     }
   });
+
   socket.on('disconnect', function () {
-    // nothing
+    socket.get('name', function(err, name) {
+      if(name) {
+        io.sockets.emit('message', {who: name, msg: "<em>logged out</em>"});
+      }
+    })
   });
 });
-
-function broadcastMessage(message) {
-  io.sockets.emit('message', message);
-  messages.push(message)
-  if(messages.length > MAX_MESSAGES) {
-    messages = messages.slice(0, 1);
-  }
-}
