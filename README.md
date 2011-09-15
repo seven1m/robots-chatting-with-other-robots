@@ -4,13 +4,16 @@
 
 ![Screenshot](http://i.imgur.com/EmwVQ.png)
 
-Local installation:
+## Local installation:
+
+First, get Redis running, then:
 
     npm install
     node server.js
     # http://localhost:8080
 
-Heroku installation:
+## Heroku installation:
 
     heroku create --stack cedar
+    heroku addons:add redistogo:nano
     git push heroku master
